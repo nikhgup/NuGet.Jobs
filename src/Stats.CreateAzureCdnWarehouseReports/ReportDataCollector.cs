@@ -33,7 +33,7 @@ namespace Stats.CreateAzureCdnWarehouseReports
 
         public async Task<DataTable> CollectAsync(DateTime reportGenerationTime, params Tuple<string, int, string>[] parameters)
         {
-            _logger.LogInformation("{ProcedureName}: Collecting data", _procedureName);
+            _logger.LogInformation("{ProcedureName}: Collecting data. Parameters: {@Parameters}", _procedureName, parameters);
 
             DataTable table = null;
 
@@ -41,7 +41,7 @@ namespace Stats.CreateAzureCdnWarehouseReports
             await WithRetry(async () => table = await ExecuteSql(reportGenerationTime, parameters), _logger);
 
             Debug.Assert(table != null);
-            _logger.LogInformation("{ProcedureName}: Collected {RowsCount} rows", _procedureName, table.Rows.Count);
+            _logger.LogInformation("{ProcedureName}: Collected {RowsCount} rows. Parameters: {@Parameters}", _procedureName, table.Rows.Count, parameters);
             return table;
         }
 

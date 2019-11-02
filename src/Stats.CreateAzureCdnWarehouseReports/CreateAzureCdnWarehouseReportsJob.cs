@@ -236,11 +236,15 @@ namespace Stats.CreateAzureCdnWarehouseReports
 
         private async Task RebuildPackageReports(CloudBlobContainer destinationContainer, DateTime reportGenerationTime)
         {
+            Logger.LogInformation("RebuildPackageReports started");
             var dirtyPackageIds = await ReportDataCollector.GetDirtyPackageIds(
                 LoggerFactory.CreateLogger<ReportDataCollector>(),
                 OpenSqlConnectionAsync<StatisticsDbConfiguration>,
                 reportGenerationTime,
                 _sqlCommandTimeoutSeconds);
+
+            Logger.LogInformation("Got {NumDirtyPackages} dirty packages",
+                dirtyPackageIds.Count);
 
             if (!dirtyPackageIds.Any())
             {
@@ -266,6 +270,8 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 ProcessReport(LoggerFactory, destinationContainer, reportBuilder, reportDataCollector, reportGenerationTime, Tuple.Create("@PackageId", 128, dirtyPackageId.PackageId)).Wait();
                 ApplicationInsightsHelper.TrackReportProcessed(reportBuilder.ReportName + " report", packageId);
             });
+
+            Logger.LogInformation("Done processing the first 100: {IsCompleted}", top100Task.IsCompleted);
 
             // once top 100 is processed, continue with the rest
             if (top100Task.IsCompleted)
@@ -301,12 +307,17 @@ namespace Stats.CreateAzureCdnWarehouseReports
                         }
                     });
 
+                Logger.LogInformation("Done processing the rest: {IsCompleted}", top100Task.IsCompleted);
+
                 if (top100Task.IsCompleted)
                 {
                     var runToCursor = dirtyPackageIds.First().RunToCuror;
+                    Logger.LogInformation("Updating DirtyPackageIdCursor to {GetDirtyPackageIdCursor}", runToCursor);
                     await ReportDataCollector.UpdateDirtyPackageIdCursor(OpenSqlConnectionAsync<StatisticsDbConfiguration>, runToCursor, _sqlCommandTimeoutSeconds);
                 }
             }
+
+            Logger.LogInformation("RebuildPackageReports finished");
         }
 
         private async Task CleanInactiveRecentPopularityDetailByPackageReports(CloudBlobContainer destinationContainer, DateTime reportGenerationTime)
