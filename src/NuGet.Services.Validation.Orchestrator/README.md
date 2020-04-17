@@ -29,3 +29,40 @@ prerequisites finish successfully.
 Single set of validators for a single package make a validation set. A package can have any number of validation sets (they can run concurrently).
 The first validation set that has all its validators succeed causes that package to get published. If any validator fails, processing of the whole
 set stops.
+
+# Configuration
+
+## Command line arguments
+
+```
+NuGet.Services.Validation.Orchestrator.exe -Configuration <configuration_filename> [-InstanceName <instance_name>] [-InstrumentationKey <AI_instrumentation_key>] [-HeartbeatIntervalSeconds <seconds>]
+```
+
+* `-Configuration <configuration_filename>` - the name of the service configuration file;
+* `-InstanceName <instance_name>` - optional name of the instance used in the logs. Will
+	appear in `InstanceName` property of `customDimensions` object in AI. If not specified
+	will use `NuGet.Services.Validation.Orchestrator`.
+* `-InstrumentationKey <AI_instrumentation_key>` - AI instrumentation key to send logs to.
+	If not specified will only log to console.
+* `-HeartbeatIntervalSeconds <seconds>` - optional heartbeat send interval. If specified
+	will override the default AI setting.
+
+## Configuration file
+
+Configuration file is a JSON file with the following properties:
+
+### `Configuration`
+### `RunnerConfiguration`
+### `GalleryDb`
+### `ValidationDb`
+### `PackageSigning`
+### `PackageCertificates`
+### `ScanAndSign`
+### `ServiceBus`
+### `FlatContainer`
+### `Email`
+### `FeatureFlags`
+### `Leases`
+### `PackageDownloadTimeout`
+### `KeyVault_VaultName`
+### `KeyVaultUseManagedIdentity`
