@@ -32,9 +32,9 @@ namespace NuGet.Services.AzureSearch.SearchService
 
                 Assert.True(status.Success);
                 _searchDocuments.Verify(x => x.CountAsync(), Times.Never);
-                _searchDocuments.Verify(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()), Times.Never);
+                _searchDocuments.Verify(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()), Times.Never);
                 _hijackDocuments.Verify(x => x.CountAsync(), Times.Never);
-                _hijackDocuments.Verify(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()), Times.Never);
+                _hijackDocuments.Verify(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()), Times.Never);
                 Assert.Null(status.SearchIndex);
                 Assert.Null(status.HijackIndex);
                 Assert.NotNull(status.Server);
@@ -71,8 +71,8 @@ namespace NuGet.Services.AzureSearch.SearchService
             public async Task ReturnsNullCommitTimestampWhenThereAreNoDocuments()
             {
                 _searchDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()))
-                    .ReturnsAsync(new DocumentSearchResult());
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()))
+                    .ReturnsAsync(new DocumentSearchResult<BaseMetadataDocument>());
 
                 var status = await _target.GetStatusAsync(SearchStatusOptions.All, _assembly);
 
@@ -85,7 +85,7 @@ namespace NuGet.Services.AzureSearch.SearchService
             public async Task ReturnsNullCommitTimestampWhenTheLastCommitTimestampIsNull()
             {
                 _searchDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()))
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()))
                     .ReturnsAsync(GetLastCommitTimestampResult(timestamp: null));
 
                 var status = await _target.GetStatusAsync(SearchStatusOptions.All, _assembly);
@@ -129,9 +129,9 @@ namespace NuGet.Services.AzureSearch.SearchService
                 Assert.Same(_auxiliaryFilesMetadata, status.AuxiliaryFiles);
 
                 _searchDocuments.Verify(x => x.CountAsync(), Times.Once);
-                _searchDocuments.Verify(x => x.SearchAsync("*", It.IsAny<SearchParameters>()), Times.Exactly(2));
+                _searchDocuments.Verify(x => x.SearchAsync<BaseMetadataDocument>("*", It.IsAny<SearchParameters>()), Times.Exactly(2));
                 _hijackDocuments.Verify(x => x.CountAsync(), Times.Once);
-                _hijackDocuments.Verify(x => x.SearchAsync("*", It.IsAny<SearchParameters>()), Times.Exactly(2));
+                _hijackDocuments.Verify(x => x.SearchAsync<BaseMetadataDocument>("*", It.IsAny<SearchParameters>()), Times.Exactly(2));
             }
 
             [Fact]
@@ -153,7 +153,7 @@ namespace NuGet.Services.AzureSearch.SearchService
             public async Task HandlesFailedSearchIndexStatus()
             {
                 _searchDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()))
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()))
                     .ThrowsAsync(new InvalidOperationException("Could not hit the search index."));
 
                 var status = await _target.GetStatusAsync(SearchStatusOptions.All, _assembly);
@@ -170,7 +170,7 @@ namespace NuGet.Services.AzureSearch.SearchService
             public async Task HandlesFailedHijackIndexStatus()
             {
                 _hijackDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.IsAny<SearchParameters>()))
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.IsAny<SearchParameters>()))
                     .ThrowsAsync(new InvalidOperationException("Could not hit the hijack index."));
 
                 var status = await _target.GetStatusAsync(SearchStatusOptions.All, _assembly);
@@ -273,18 +273,18 @@ namespace NuGet.Services.AzureSearch.SearchService
                 _parametersBuilder.Setup(x => x.LastCommitTimestamp()).Returns(() => _lastCommitTimestampParameters);
 
                 _searchDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.Is<SearchParameters>(p => !IsLastCommitTimestamp(p))))
-                    .ReturnsAsync(new DocumentSearchResult())
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.Is<SearchParameters>(p => !IsLastCommitTimestamp(p))))
+                    .ReturnsAsync(new DocumentSearchResult<BaseMetadataDocument>())
                     .Callback(() => Thread.Sleep(TimeSpan.FromMilliseconds(1)));
                 _searchDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.Is<SearchParameters>(p => IsLastCommitTimestamp(p))))
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.Is<SearchParameters>(p => IsLastCommitTimestamp(p))))
                     .ReturnsAsync(GetLastCommitTimestampResult(_searchLastCommitTimestamp));
                 _hijackDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.Is<SearchParameters>(p => !IsLastCommitTimestamp(p))))
-                    .ReturnsAsync(new DocumentSearchResult())
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.Is<SearchParameters>(p => !IsLastCommitTimestamp(p))))
+                    .ReturnsAsync(new DocumentSearchResult<BaseMetadataDocument>())
                     .Callback(() => Thread.Sleep(TimeSpan.FromMilliseconds(1)));
                 _hijackDocuments
-                    .Setup(x => x.SearchAsync(It.IsAny<string>(), It.Is<SearchParameters>(p => IsLastCommitTimestamp(p))))
+                    .Setup(x => x.SearchAsync<BaseMetadataDocument>(It.IsAny<string>(), It.Is<SearchParameters>(p => IsLastCommitTimestamp(p))))
                     .ReturnsAsync(GetLastCommitTimestampResult(_hijackLastCommitTimestamp));
                 _options.Setup(x => x.Value).Returns(() => _config);
                 _auxiliaryDataCache.Setup(x => x.Get()).Returns(() => _auxiliaryData.Object);
@@ -301,17 +301,17 @@ namespace NuGet.Services.AzureSearch.SearchService
                     _logger);
             }
 
-            protected static DocumentSearchResult GetLastCommitTimestampResult(DateTimeOffset? timestamp)
+            protected static DocumentSearchResult<BaseMetadataDocument> GetLastCommitTimestampResult(DateTimeOffset? timestamp)
             {
-                return new DocumentSearchResult
+                return new DocumentSearchResult<BaseMetadataDocument>
                 {
-                    Results = new List<SearchResult>
+                    Results = new List<SearchResult<BaseMetadataDocument>>
                     {
-                        new SearchResult
+                        new SearchResult<BaseMetadataDocument>
                         {
-                            Document = new Document
+                            Document = new BaseMetadataDocument
                             {
-                                { "lastCommitTimestamp", timestamp },
+                                LastCommitTimestamp = timestamp,
                             },
                         },
                     },

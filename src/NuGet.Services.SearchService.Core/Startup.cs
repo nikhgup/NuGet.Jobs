@@ -2,25 +2,23 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Autofac;
+using Azure.Core.Serialization;
+using Azure.Search.Documents;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.Extensibility.Implementation;
-using Microsoft.ApplicationInsights.WindowsServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using NuGet.Services.AzureSearch;
 using NuGet.Services.AzureSearch.SearchService;
+using NuGet.Services.AzureSearch.Wrappers;
 using NuGet.Services.Configuration;
 using NuGet.Services.KeyVault;
 using NuGet.Services.Logging;
@@ -29,7 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Timers;
+using System.Text.Json;
 
 namespace NuGet.Services.SearchService
 {
@@ -65,6 +63,31 @@ namespace NuGet.Services.SearchService
                     o.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                 });
 
+            services.AddAzureClients(builder =>
+            {
+                builder
+                    .AddSearchClient(Configuration.GetSection(ConfigurationSectionName).GetSection("SearchIndex"))
+                    .WithName(DependencyInjectionExtensions.SearchIndexKey)
+                    .ConfigureOptions(o =>
+                    {
+                        o.Serializer = new JsonObjectSerializer(new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        });
+                    });
+
+                builder
+                    .AddSearchClient(Configuration.GetSection(ConfigurationSectionName).GetSection("HijackIndex"))
+                    .WithName(DependencyInjectionExtensions.HijackIndexKey)
+                    .ConfigureOptions(o =>
+                    {
+                        o.Serializer = new JsonObjectSerializer(new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        });
+                    });
+            });
+
             services.Configure<AzureSearchConfiguration>(Configuration.GetSection(ConfigurationSectionName));
             services.Configure<SearchServiceConfiguration>(Configuration.GetSection(ConfigurationSectionName));
 
@@ -91,6 +114,21 @@ namespace NuGet.Services.SearchService
         {
             builder.RegisterAssemblyModules(typeof(Startup).Assembly);
             builder.AddAzureSearch();
+
+            AddNewKeyedSearchClient(builder, DependencyInjectionExtensions.SearchIndexKey);
+            AddNewKeyedSearchClient(builder, DependencyInjectionExtensions.HijackIndexKey);
+        }
+
+        private static void AddNewKeyedSearchClient(ContainerBuilder builder, string key)
+        {
+            builder
+                .Register<ISearchIndexClientWrapper>(c =>
+                {
+                    var factory = c.Resolve<IAzureClientFactory<SearchClient>>();
+                    var client = factory.CreateClient(key);
+                    return new NewSearchIndexClientWrapper(client);
+                })
+                .Keyed<ISearchIndexClientWrapper>(key);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -10,9 +10,6 @@ namespace NuGet.Services.AzureSearch.Wrappers
     {
         Task<DocumentIndexResult> IndexAsync<T>(IndexBatch<T> batch) where T : class;
         Task<T> GetOrNullAsync<T>(string key) where T : class;
-        Task<DocumentSearchResult> SearchAsync(
-            string searchText,
-            SearchParameters searchParameters);
         Task<DocumentSearchResult<T>> SearchAsync<T>(
             string searchText,
             SearchParameters searchParameters) where T : class;

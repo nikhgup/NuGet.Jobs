@@ -180,15 +180,20 @@ namespace NuGet.Services.AzureSearch.SearchService
             _telemetryService.TrackDocumentCountQuery(index.IndexName, documentCountResult.Value, documentCountResult.Duration);
 
             var lastCommitTimestampParameters = _parametersBuilder.LastCommitTimestamp();
-            var lastCommitTimestampResult = await Measure.DurationWithValueAsync(() => index.Documents.SearchAsync("*", lastCommitTimestampParameters));
+            var lastCommitTimestampResult = await Measure.DurationWithValueAsync(() => index
+                .Documents
+                .SearchAsync<BaseMetadataDocument>("*", lastCommitTimestampParameters));
             var lastCommitTimestamp = lastCommitTimestampResult
                 .Value?
                 .Results?
                 .FirstOrDefault()?
-                .Document[IndexFields.LastCommitTimestamp] as DateTimeOffset?;
+                .Document
+                .LastCommitTimestamp;
             _telemetryService.TrackLastCommitTimestampQuery(index.IndexName, lastCommitTimestamp, lastCommitTimestampResult.Duration);
 
-            var warmQueryDuration = await Measure.DurationAsync(() => index.Documents.SearchAsync("*", new SearchParameters()));
+            var warmQueryDuration = await Measure.DurationAsync(() => index
+                .Documents
+                .SearchAsync<BaseMetadataDocument>("*", new SearchParameters()));
             _telemetryService.TrackWarmQuery(index.IndexName, warmQueryDuration);
 
             return new IndexStatus

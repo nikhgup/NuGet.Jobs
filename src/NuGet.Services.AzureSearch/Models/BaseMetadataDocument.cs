@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace NuGet.Services.AzureSearch
 {
-    public abstract class BaseMetadataDocument : CommittedDocument, IBaseMetadataDocument
+    public class BaseMetadataDocument : CommittedDocument, IBaseMetadataDocument
     {
         [IsFilterable]
         [JsonProperty(NullValueHandling = NullValueHandling.Include)]

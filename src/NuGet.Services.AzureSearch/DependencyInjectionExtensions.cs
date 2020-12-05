@@ -28,6 +28,9 @@ namespace NuGet.Services.AzureSearch
 {
     public static class DependencyInjectionExtensions
     {
+        public static readonly string SearchIndexKey = "SearchIndex";
+        public static readonly string HijackIndexKey = "HijackIndex";
+
         public static ContainerBuilder AddAzureSearch(this ContainerBuilder containerBuilder)
         {
             containerBuilder.AddFeatureFlags();
@@ -35,7 +38,7 @@ namespace NuGet.Services.AzureSearch
             /// Here, we register services that depend on an interface that there are multiple implementations.
 
             /// There are multiple implementations of <see cref="ISearchServiceClientWrapper"/>.
-            RegisterIndexServices(containerBuilder, "SearchIndex", "HijackIndex");
+            RegisterIndexServices(containerBuilder, SearchIndexKey, HijackIndexKey);
 
             /// There are multiple implementations of storage, in particular <see cref="ICloudBlobClient"/>.
             RegisterAzureSearchStorageServices(containerBuilder, "AzureSearchStorage");
