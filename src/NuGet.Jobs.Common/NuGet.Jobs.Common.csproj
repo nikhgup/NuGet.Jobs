@@ -34,6 +34,9 @@
     <PackageReference Include="NuGet.Services.Sql">
       <Version>$(ServerCommonPackageVersion)</Version>
     </PackageReference>
+    <PackageReference Include="WindowsAzure.Storage">
+      <Version>9.3.3</Version>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">

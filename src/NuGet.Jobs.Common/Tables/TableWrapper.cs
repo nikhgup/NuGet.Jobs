@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace StatusAggregator.Table
+namespace NuGet.Jobs
 {
     public class TableWrapper : ITableWrapper
     {
@@ -34,10 +34,10 @@ namespace StatusAggregator.Table
             return _table.CreateIfNotExistsAsync();
         }
 
-        public async Task<T> RetrieveAsync<T>(string rowKey) 
+        public async Task<T> RetrieveAsync<T>(string partitionKey, string rowKey) 
             where T : class, ITableEntity
         {
-            var operation = TableOperation.Retrieve<T>(TablePartitionKeys.Get<T>(), rowKey);
+            var operation = TableOperation.Retrieve<T>(partitionKey, rowKey);
             return (await _table.ExecuteAsync(operation)).Result as T;
         }
 
@@ -76,12 +76,13 @@ namespace StatusAggregator.Table
             return _table.ExecuteAsync(operation);
         }
 
-        public IQueryable<T> CreateQuery<T>() where T : ITableEntity, new()
+        public IQueryable<T> CreateQuery<T>(string partitionKey)
+            where T : ITableEntity, new()
         {
             return _table
                 .CreateQuery<T>()
                 .AsQueryable()
-                .Where(e => e.PartitionKey == TablePartitionKeys.Get<T>());
+                .Where(e => e.PartitionKey == partitionKey);
         }
     }
 }

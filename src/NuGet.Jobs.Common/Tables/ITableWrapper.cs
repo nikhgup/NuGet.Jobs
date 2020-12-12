@@ -5,13 +5,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace StatusAggregator.Table
+namespace NuGet.Jobs
 {
     public interface ITableWrapper
     {
         Task CreateIfNotExistsAsync();
 
-        Task<T> RetrieveAsync<T>(string rowKey) 
+        Task<T> RetrieveAsync<T>(string partitionKey, string rowKey)
             where T : class, ITableEntity;
 
         Task InsertAsync(ITableEntity tableEntity);
@@ -26,6 +26,7 @@ namespace StatusAggregator.Table
 
         Task DeleteAsync(ITableEntity tableEntity);
 
-        IQueryable<T> CreateQuery<T>() where T : ITableEntity, new();
+        IQueryable<T> CreateQuery<T>(string partitionKey)
+            where T : ITableEntity, new();
     }
 }

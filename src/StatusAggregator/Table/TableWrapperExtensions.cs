@@ -1,9 +1,11 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.WindowsAzure.Storage.Table;
-using NuGet.Services.Status.Table;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.WindowsAzure.Storage.Table;
+using NuGet.Jobs;
+using NuGet.Services.Status.Table;
 
 namespace StatusAggregator.Table
 {
@@ -25,5 +27,18 @@ namespace StatusAggregator.Table
                 .CreateQuery<TChild>()
                 .Where(e => e.ParentRowKey == entity.RowKey);
         }
+
+        public static async Task<T> RetrieveAsync<T>(this ITableWrapper table, string rowKey)
+            where T : class, ITableEntity
+        {
+            return await table.RetrieveAsync<T>(TablePartitionKeys.Get<T>(), rowKey);
+        }
+
+        public static IQueryable<T> CreateQuery<T>(this ITableWrapper table)
+            where T : ITableEntity, new()
+        {
+            return table.CreateQuery<T>(TablePartitionKeys.Get<T>());
+        }
+
     }
 }

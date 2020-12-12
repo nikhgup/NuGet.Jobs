@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
+using NuGet.Jobs;
 using NuGet.Services.Status.Table;
 using StatusAggregator.Table;
 using StatusAggregator.Tests.TestUtility;

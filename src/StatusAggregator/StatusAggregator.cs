@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NuGet.Jobs;
 using StatusAggregator.Container;
 using StatusAggregator.Export;
 using StatusAggregator.Table;

@@ -4,6 +4,7 @@
 using System.Linq;
 using Microsoft.WindowsAzure.Storage.Table;
 using Moq;
+using NuGet.Jobs;
 using StatusAggregator.Table;
 
 namespace StatusAggregator.Tests.TestUtility

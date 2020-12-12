@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NuGet.Jobs;
 using NuGet.Services.Status.Table.Manual;
 using StatusAggregator.Collector;
 using StatusAggregator.Manual;
