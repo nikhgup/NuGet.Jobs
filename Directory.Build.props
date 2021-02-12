@@ -2,7 +2,7 @@
 
   <!-- NuGet dependencies shared across projects -->
   <PropertyGroup>
-    <ServerCommonPackageVersion>2.84.0</ServerCommonPackageVersion>
+    <ServerCommonPackageVersion>2.85.0-nikhgup-serviceBusUpdate-4466927</ServerCommonPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
