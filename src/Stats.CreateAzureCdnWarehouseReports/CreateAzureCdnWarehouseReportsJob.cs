@@ -139,6 +139,8 @@ namespace Stats.CreateAzureCdnWarehouseReports
                     await GenerateStandardReport(reportName, reportGenerationTime, destinationContainer, reportBuilderLogger, reportCollectorLogger);
                 }
 
+                Logger.LogInformation("[Debug] Finished generating standard reports! - Line 142");
+
                 await RebuildPackageReports(destinationContainer, reportGenerationTime);
                 await CleanInactiveRecentPopularityDetailByPackageReports(destinationContainer, reportGenerationTime);
             }
@@ -243,12 +245,16 @@ namespace Stats.CreateAzureCdnWarehouseReports
 
         private async Task RebuildPackageReports(CloudBlobContainer destinationContainer, DateTime reportGenerationTime)
         {
+            Logger.LogInformation("[Debug] Getting dirty package Ids! - Line 248");
+
             var dirtyPackageIds = await ReportDataCollector.GetDirtyPackageIds(
                 LoggerFactory.CreateLogger<ReportDataCollector>(),
                 OpenSqlConnectionAsync<StatisticsDbConfiguration>,
                 reportGenerationTime,
                 _sqlCommandTimeoutSeconds,
                 _applicationInsightsHelper);
+
+            Logger.LogInformation("[Debug] Got dirty package Ids! - Line 257");
 
             if (!dirtyPackageIds.Any())
             {
@@ -264,6 +270,8 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 _sqlCommandTimeoutSeconds,
                 _applicationInsightsHelper);
 
+            Logger.LogInformation("[Debug] Processing top100 packages! - Line 273");
+
             var top100Task = Parallel.ForEach(top100, new ParallelOptions { MaxDegreeOfParallelism = _perPackageReportDegreeOfParallelism }, dirtyPackageId =>
             {
                 var packageId = dirtyPackageId.PackageId.ToLowerInvariant();
@@ -275,6 +283,8 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 ProcessReport(LoggerFactory, destinationContainer, reportBuilder, reportDataCollector, reportGenerationTime, Tuple.Create("@PackageId", 128, dirtyPackageId.PackageId)).Wait();
                 _applicationInsightsHelper.TrackReportProcessed(reportBuilder.ReportName + " report", packageId);
             });
+
+            Logger.LogInformation("[Debug] Processed top 100 packages! - Line 287");
 
             // once top 100 is processed, continue with the rest
             if (top100Task.IsCompleted)
