@@ -137,9 +137,11 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 foreach (var reportName in ReportNames.StandardReports)
                 {
                     await GenerateStandardReport(reportName, reportGenerationTime, destinationContainer, reportBuilderLogger, reportCollectorLogger);
+
+                    Logger.LogInformation("[Debug] Finished generating the {reportName} report!", reportName);
                 }
 
-                Logger.LogInformation("[Debug] Finished generating standard reports! - Line 142");
+                Logger.LogInformation("[Debug] Finished generating standard reports!");
 
                 await RebuildPackageReports(destinationContainer, reportGenerationTime);
                 await CleanInactiveRecentPopularityDetailByPackageReports(destinationContainer, reportGenerationTime);
@@ -245,7 +247,7 @@ namespace Stats.CreateAzureCdnWarehouseReports
 
         private async Task RebuildPackageReports(CloudBlobContainer destinationContainer, DateTime reportGenerationTime)
         {
-            Logger.LogInformation("[Debug] Getting dirty package Ids! - Line 248");
+            Logger.LogInformation("[Debug] Getting dirty package Ids!");
 
             var dirtyPackageIds = await ReportDataCollector.GetDirtyPackageIds(
                 LoggerFactory.CreateLogger<ReportDataCollector>(),
@@ -270,7 +272,7 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 _sqlCommandTimeoutSeconds,
                 _applicationInsightsHelper);
 
-            Logger.LogInformation("[Debug] Processing top100 packages! - Line 273");
+            Logger.LogInformation("[Debug] Processing top100 packages!");
 
             var top100Task = Parallel.ForEach(top100, new ParallelOptions { MaxDegreeOfParallelism = _perPackageReportDegreeOfParallelism }, dirtyPackageId =>
             {
@@ -284,7 +286,7 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 _applicationInsightsHelper.TrackReportProcessed(reportBuilder.ReportName + " report", packageId);
             });
 
-            Logger.LogInformation("[Debug] Processed top 100 packages! - Line 287");
+            Logger.LogInformation("[Debug] Processed top 100 packages!");
 
             // once top 100 is processed, continue with the rest
             if (top100Task.IsCompleted)
