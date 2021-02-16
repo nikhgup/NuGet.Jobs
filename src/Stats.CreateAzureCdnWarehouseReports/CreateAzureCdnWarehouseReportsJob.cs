@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Configuration;
@@ -273,6 +274,9 @@ namespace Stats.CreateAzureCdnWarehouseReports
                 _applicationInsightsHelper);
 
             Logger.LogInformation("[Debug] Processing top100 packages!");
+
+            Logger.LogInformation("[Debug] Sleeping for 10 seconds!");
+            Thread.Sleep(10000);
 
             var top100Task = Parallel.ForEach(top100, new ParallelOptions { MaxDegreeOfParallelism = _perPackageReportDegreeOfParallelism }, dirtyPackageId =>
             {
